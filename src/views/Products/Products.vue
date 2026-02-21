@@ -1,3 +1,4 @@
+//ngoding di laptop
 <template>
   <div class="pr-8 pl-8 pt-8 pb-0">
     <div class="flex items-center justify-between mb-8">
