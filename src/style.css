@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+html, body, #app {
+  height: 100%;
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.25s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+.dropdown-enter-to,
+.dropdown-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
