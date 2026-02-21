@@ -58,19 +58,15 @@
                   Category <span class="text-red-500">*</span>
                 </label>
                 <select
-                  v-model="form.category"
+                  v-model="form.category_id"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 >
-                  <option value="">Select Category</option>
-                  <option value="CPU">CPU</option>
-                  <option value="GPU">GPU</option>
-                  <option value="RAM">RAM</option>
-                  <option value="Motherboard">Motherboard</option>
-                  <option value="Storage">Storage</option>
-                  <option value="PSU">PSU</option>
-                  <option value="Case">Case</option>
-                  <option value="Cooling">Cooling</option>
+                  <option disabled value="">Select Category</option>
+                  <option 
+                    v-for="cat in categories"
+                    :key="cat.id"
+                    :value="cat.id">{{ cat.name }}</option>
                 </select>
               </div>
               <div>
@@ -350,12 +346,21 @@
   const loading = ref(true)
   const saving = ref(false)
   const productId = ref(route.params.id)
+  const categories = ref([])
+
+  const fetchCategories = async () => {
+    const { data } = await supabase
+      .from('categories')
+      .select('*')
+
+    categories.value = data
+  }
 
   // Form data
   const form = ref({
     name: '',
     description: '',
-    category: '',
+    category_id: null,
     brand: '',
     price: null,
     stock: null,
@@ -514,7 +519,7 @@
       
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('*, categories(id,name)')
         .eq('id', productId.value)
         .single()
 
@@ -535,7 +540,7 @@
       form.value = {
         name: data.name || '',
         description: data.description || '',
-        category: data.category || '',
+        category_id: data.category_id || '',
         brand: data.brand || '',
         price: data.price || null,
         stock: data.stock || null,
@@ -565,7 +570,7 @@
   const handleSubmit = async () => {
     try {
       // Validate required fields
-      if (!form.value.name || !form.value.description || !form.value.category || 
+      if (!form.value.name || !form.value.description || !form.value.category_id || 
           !form.value.brand || form.value.price === null || form.value.stock === null || 
           !form.value.image) {
         await Swal.fire({
@@ -594,7 +599,7 @@
         html: `
           <div class="text-left">
             <p class="mb-2"><strong>Product:</strong> ${form.value.name}</p>
-            <p class="mb-2"><strong>Category:</strong> ${form.value.category}</p>
+            <p class="mb-2"><strong>Category:</strong> ${form.value.category_id}</p>
             <p class="mb-2"><strong>Price:</strong> ${formatPrice(form.value.price)}</p>
             <p class="mb-2"><strong>Stock:</strong> ${form.value.stock} units</p>
           </div>
@@ -620,7 +625,7 @@
         const updateData = {
           name: form.value.name,
           description: form.value.description,
-          category: form.value.category,
+          category_id: form.value.category_id,
           brand: form.value.brand,
           price: form.value.price,
           stock: form.value.stock,
@@ -671,5 +676,7 @@
   // Load product data on mount
   onMounted(() => {
     fetchProduct()
+    fetchCategories()
   })
+
 </script>

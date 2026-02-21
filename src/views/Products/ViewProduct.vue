@@ -89,7 +89,7 @@
                   </div>
                   <div>
                     <p class="text-xs text-gray-600">Category</p>
-                    <p class="text-lg font-bold text-purple-600">{{ product.category }}</p>
+                    <p class="text-lg font-bold text-purple-600">{{ product.categories.name }}</p>
                   </div>
                 </div>
               </div>
@@ -179,8 +179,8 @@
               <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Category</label>
                 <span 
-                  :class="['inline-flex px-3 py-1 text-sm font-medium rounded-full', categoryClass]">
-                  {{ product.category }}
+                  :class="['inline-flex px-3 py-1 text-sm font-medium rounded-full', product.categories?.buttonColor || 'bg-gray-100 text-gray-700']">
+                  {{ product.categories?.name }}
                 </span>
               </div>
               <div>
@@ -249,6 +249,7 @@
   const loading = ref(true)
   const product = ref(null)
   const productId = ref(route.params.id)
+  
 
   const statusClass = computed(() => {
     if (!product.value) return ''
@@ -260,23 +261,6 @@
     }
     
     return statusColors[product.value.status] || 'bg-gray-100 text-gray-700'
-  })
-
-  const categoryClass = computed(() => {
-    if (!product.value) return ''
-    
-    const categoryColors = {
-      CPU: 'bg-blue-100 text-blue-700',
-      GPU: 'bg-green-100 text-green-700',
-      RAM: 'bg-purple-100 text-purple-700',
-      Motherboard: 'bg-orange-100 text-orange-700',
-      Storage: 'bg-indigo-100 text-indigo-700',
-      PSU: 'bg-red-100 text-red-700',
-      Case: 'bg-pink-100 text-pink-700',
-      Cooling: 'bg-cyan-100 text-cyan-700'
-    }
-    
-    return categoryColors[product.value.category] || 'bg-gray-100 text-gray-700'
   })
 
   const formatPrice = (price) => {
@@ -329,7 +313,7 @@
       
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('*, categories(*)')
         .eq('id', productId.value)
         .single()
 
