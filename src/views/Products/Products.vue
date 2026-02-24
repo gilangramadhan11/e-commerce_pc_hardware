@@ -539,9 +539,7 @@
   
   onMounted(() => {
     fetchProducts()
-  })
-
-  onMounted(() => {
     fetchCategories()
   })
+
 </script>
