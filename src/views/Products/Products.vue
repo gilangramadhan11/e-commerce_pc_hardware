@@ -262,7 +262,7 @@
   import { ref, computed, watch, onMounted } from 'vue'
   import { RouterLink } from 'vue-router'
   import { supabase } from '../../lib/supabase'
-  import { deleteImageFromStorage } from '../../lib/storagehelpers'
+  import { deleteImageFromStorage } from '../../lib/storageHelpers'
   import Swal from 'sweetalert2'
 
   const products = ref([])

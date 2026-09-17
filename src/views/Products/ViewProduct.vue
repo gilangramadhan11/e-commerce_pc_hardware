@@ -240,7 +240,7 @@
   import { ref, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { supabase } from '../../lib/supabase'
-  import { deleteImageFromStorage } from '../../lib/storagehelpers'
+  import { deleteImageFromStorage } from '../../lib/storageHelpers'
   import Swal from 'sweetalert2'
 
   const route = useRoute()
