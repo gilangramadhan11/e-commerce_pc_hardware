@@ -31,46 +31,46 @@
       </div>
       <div class="ml-auto relative">
         <select 
-        v-model="selectedCategory"
-        class="appearance-none pr-8 px-4 py-2 border border-gray-200 shadow rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
-        <option value="">
-          All Category
-        </option>
-        <option 
-          v-for="cat in categories"
-          :key="cat.id"
-          :value="cat.id">
-        {{ cat.name }}
-        </option>
-      </select>
-      <i class="bx bx-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          v-model="selectedCategory"
+          class="appearance-none pr-8 px-4 py-2 border border-gray-200 shadow rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option value="">
+            All Category
+          </option>
+          <option 
+            v-for="cat in categories"
+            :key="cat.id"
+            :value="cat.id">
+          {{ cat.name }}
+          </option>
+        </select>
+        <i class="bx bx-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+      </div>
+      <div class="relative">
+        <select 
+          v-model="selectedStatus"
+          class="appearance-none pr-8 px-4 py-2 border border-gray-200 shadow rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option value="">Status</option>
+          <option value="In Stock">In Stock</option>
+          <option value="Low Stock">Low Stock</option>
+          <option value="Out of Stock">Out of Stock</option>
+        </select>
+        <i class="bx bx-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+      </div>
     </div>
-    <div class="relative">
-      <select 
-        v-model="selectedStatus"
-        class="appearance-none pr-8 px-4 py-2 border border-gray-200 shadow rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
-        <option value="">Status</option>
-        <option value="In Stock">In Stock</option>
-        <option value="Low Stock">Low Stock</option>
-        <option value="Out of Stock">Out of Stock</option>
-      </select>
-      <i class="bx bx-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-    </div>
-  </div>
 
-  <div 
-    v-if="searchQuery || selectedCategory || selectedStatus" 
-    class="bg-blue-50 rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">
-      <p class="text-sm text-gray-600">
-        Found <span class="font-bold text-indigo-600">{{ sortedProducts.length }}</span> products 
-        <span v-if="searchQuery"> matching "<span class="font-sembold"> {{ searchQuery }}</span>"</span>
-      </p>
-      <button 
-        @click="clearFilter"
-        class="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
-        <i class="bx bx-x"></i> Clear Filter
-      </button>
-  </div>
+    <div 
+      v-if="searchQuery || selectedCategory || selectedStatus" 
+      class="bg-blue-50 rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">
+        <p class="text-sm text-gray-600">
+          Found <span class="font-bold text-indigo-600">{{ sortedProducts.length }}</span> products 
+          <span v-if="searchQuery"> matching "<span class="font-sembold"> {{ searchQuery }}</span>"</span>
+        </p>
+        <button 
+          @click="clearFilter"
+          class="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+          <i class="bx bx-x"></i> Clear Filter
+        </button>
+    </div>
   
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
       <table class="w-full">

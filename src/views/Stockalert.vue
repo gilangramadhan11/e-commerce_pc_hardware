@@ -246,11 +246,11 @@
 
       categories.value = categoriesData || []
 
-      // Fetch low stock products (stock < 20)
+      // Fetch low stock products (stock < 10)
       const { data: productsData, error } = await supabase
         .from('products')
         .select('*, categories(*)')
-        .lt('stock', 20)
+        .lt('stock', 10)
         .order('stock', { ascending: true })
 
       if (error) throw error
@@ -277,7 +277,7 @@
   const stats = computed(() => {
     const critical = products.value.filter(p => p.stock < 5).length
     const low = products.value.filter(p => p.stock >= 5 && p.stock < 10).length
-    const needRestock = products.value.filter(p => p.stock < 20).length
+    const needRestock = products.value.filter(p => p.stock < 10).length
     const onOrder = 0 // This would come from a separate orders table
 
     return { critical, low, needRestock, onOrder }

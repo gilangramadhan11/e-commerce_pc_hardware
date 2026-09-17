@@ -1,6 +1,6 @@
 <template>
   <div class="pr-6 pb-3 pt-3">
-    <nav class="h-14 bg-white flex items-center px-3 rounded-3xl shadow-lg">
+    <nav class="h-14 bg-white flex items-center px-3 rounded-3xl shadow-lg z-50">
       <div class="relative w-64">
         <i class="bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
         <input 
@@ -22,20 +22,20 @@
           </Transition>
       </div>
       <div class="ml-auto flex items-center">
-        <div class="relative" ref="closeNotifOutside">
+        <div class="relative z-50" ref="closeNotifOutside">
           <button class="relative rounded-lg gap-2 p-2 items-center cursor-pointer hover:bg-slate-100 hover:rounded-full"
-          @click.stop="toggleNotif">
-          <i 
-            class="bx bx-bell text-xl"
-            :class="unreadCount > 0 ? 'animate-bell text-indigo-600' : ''">
-          </i>
-          <span 
-            v-if="unreadCount > 0"
-            class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full
-            ">
+            @click.stop="toggleNotif">
+            <i 
+              class="bx bx-bell text-xl"
+              :class="unreadCount > 0 ? 'animate-bell text-indigo-600' : ''">
+            </i>
+            <span 
+              v-if="unreadCount > 0"
+              class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full
+              ">
 
-          </span> 
-        </button>
+            </span> 
+          </button>
           <Transition name="dropdown">
             <div 
               v-show="notifMenu"
@@ -66,10 +66,14 @@
             </div>
           </Transition>
         </div>
-        <div class="relative" ref="dropdownOutside">
+        <div class="relative z-50" ref="dropdownOutside">
           <button class="flex items-center gap-2 px-2 py-2 rounded-lg hover:cursor-pointer" @click.stop="toggleUserMenu">
-            <img src="../assets/img/irene.jpg" class="w-8 h-8 rounded-full object-cover" alt="User">
-            <span class="text-sm text-slate-700 font-medium">Irene</span>
+            <div class="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center">
+              <span class="text-sm font-bold">
+                {{ userInitial }}
+              </span>
+            </div>
+            <span class="text-sm text-slate-700 font-medium">{{ currentUserInfo?.email?.split('@')[0] }}</span>
             <i class="bx bx-chevron-down"></i>
           </button>
           <!-- Dropdown -->
@@ -80,12 +84,14 @@
               :class="userMenu ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2 pointer-events-none'"
             >
             <div class="relative h-36 bg-linear-to-r from-blue-500 to-indigo-700 overflow-hidden">
-              <div class="relative z-10 h-full flex flex-col items-center justify-center text-sm gap-1">
-                <div class="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-md z-10">
-                  <img src="../assets/img/irene.jpg" class="w-full h-full rounded-full object-cover" alt="User">
+              <div class="relative z-50 h-full flex flex-col items-center justify-center text-sm gap-1">
+                <div class="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center">
+                  <span class="text-sm font-bold">
+                    {{ userInitial }}
+                  </span>
                 </div>
-                  <p class="font-semibold text-white text-sm">Irene</p>
-                  <p class="text-white text-xs">Admin</p>
+                  <p class="font-semibold text-white text-sm">{{ currentUserInfo?.email?.split('@')[0] }}</p>
+                  <p class="text-white text-xs">{{ currentUserInfo?.roles?.[0] }}</p>
               </div>
                 <svg
                   class="absolute bottom-0 left-0 w-full"
@@ -103,14 +109,15 @@
                   />
                 </svg>
               </div>
-              <div class="py-2 flex flex-col items-left gap-1"> 
+              <div class="py-2 flex flex-col items-left gap-1 z-50"> 
                 <button class="inline-flex items-center gap-3 px-4 py-2 hover:bg-slate-100 cursor-pointer hover:rounded-3xl hover:text-sky-500">
                   <i class="bx bx-cog text-lg hover:text-sky-500"></i>Setting
                 </button>
                 <button class="inline-flex items-center gap-3 px-4 py-2 hover:bg-slate-100 cursor-pointer hover:rounded-3xl hover:text-sky-500">
                   <i class="bx bx-user text-lg hover:text-sky-500"></i>Account
                 </button>
-                <button class="inline-flex items-center gap-3 px-4 py-2 hover:bg-slate-100 cursor-pointer hover:rounded-3xl text-red-500 ">
+                <button 
+                class="inline-flex items-center gap-3 px-4 py-2 hover:bg-slate-100 cursor-pointer hover:rounded-3xl text-red-500 " @click="logout">
                   <i class="bx bx-log-out text-lg"></i>Logout
                 </button>
               </div>
@@ -123,12 +130,20 @@
 </template>
 <script setup>
   import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+  import { supabase } from '../lib/supabase'
+  import { useRouter } from 'vue-router'
+  import Swal from 'sweetalert2'
 
+  const router = useRouter()
   const userMenu = ref(false)
   const dropdownOutside = ref(null)
   const notifMenu = ref(false)
   const closeNotifOutside = ref(null)
   const search = ref ('')
+  const profile = ref(null)
+  const userInfo = ref(null)
+  const currentUser = ref(null)
+  const currentUserInfo = ref(null)
 
   function toggleUserMenu(){
     userMenu.value = !userMenu.value
@@ -192,6 +207,62 @@
     return menuList.value.filter(m =>
       m.name.toLowerCase().includes(search.value.toLowerCase())
     )
+  })
+
+  const logout = async () => {
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Logout',
+      cancelButtonText: 'Cancel'
+    })
+
+    if (!result.isConfirmed) return
+
+    await supabase.auth.signOut()
+
+    router.push('/login')
+  }
+
+  onMounted(async () => {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('users_with_roles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    currentUserInfo.value = data
+  })
+
+  const userInitial = computed(() => {
+    const name =
+      profile.value?.full_name ||
+      currentUser.value?.email?.split('@')[0] ||
+      'User'
+
+    const words = name.split(' ')
+
+    if (words.length > 1) {
+      return (
+        words[0][0] +
+        words[1][0]
+      ).toUpperCase()
+    }
+
+    return name.substring(0, 2).toUpperCase()
   })
 
 </script>

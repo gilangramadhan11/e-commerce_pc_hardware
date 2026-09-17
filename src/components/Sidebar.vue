@@ -4,7 +4,7 @@
       class="flex flex-col"
       :class="['bg-gray-800 text-white transition-all duration-300 ease-in-out rounded-3xl shadow-lg',
         isOpen ? 'w-64' :'w-20'
-      ]"?>
+      ]">
       
       <div 
         :class="['flex items-center pl-4 pt-2 pb-2 pr-4  border-b-2 border-white',
@@ -22,7 +22,7 @@
 
       <nav class="flex-1 overflow-y-auto py-4">
         <ul class="space-y-2 px-3">
-          <li v-for="item in menuItem"
+          <li v-for="item in filteredMenu"
               :key="item.name">
             <router-link 
               v-if="!item.subMenu" :to="item.path"
@@ -62,7 +62,7 @@
                 class="mt-2 space-y-1 ml-4"
               >
                 <li 
-                  v-for="subItem in item.subMenu"
+                  v-for="subItem in getVisibleSubmenu(item.subMenu)"
                   :key="subItem.name"
                 >
                   <router-link :to="subItem.path"
@@ -88,13 +88,16 @@
           :class="['flex items-center gap-3', 
           isOpen ? 'justify-between' : 'justify-center']">
           <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-            <span class="text-sm font-bold">U</span>
+            <span class="text-sm font-bold">
+              {{ userInitial }}
+            </span>
           </div>
           <div 
             v-show="isOpen"
             class="flex-1 min-w-0">
-            <p class="text-sm font-semibold truncate">Irene</p>
-            <p class="text-xs text-slate-400 truncate">Ireneredvelvet@gmail.com</p>
+            <p class="text-sm font-semibold truncate">{{ currentUserInfo?.email?.split('@')[0] }}</p>
+            <p class="text-xs text-slate-400 truncate">{{ currentUserInfo?.email || 'user@example.com' }}</p>
+            <span class="text-xs bg-blue-600 px-2 py-1 rounded">{{ currentUserInfo?.roles?.[0] }}</span>
           </div>
         </div>
       </div>
@@ -103,8 +106,11 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
+  import { ref, onMounted, computed } from 'vue'
   import { useRoute, useRouter} from 'vue-router'
+  import { supabase } from '../lib/supabase'
+  
+  const userRole = ref('user') // Simulated user role, replace with actual authentication logic
   
   const route = useRoute()
   const router = useRouter()
@@ -112,15 +118,20 @@
   const isOpen = ref(true)
   const activeItem = ref('Dashboard')
   const expandedMenu = ref([])
+  const profile = ref(null)
+  const userInfo = ref(null)
+  const currentUser = ref(null)
+  const currentUserInfo = ref(null)
 
+  
   const toggleSidebar = () => {
     isOpen.value = !isOpen.value
   }
-
+  
   const setActive =(itemName) => {
     activeItem.value = itemName
   }
-
+  
   const toggleSubmenu = (itemName) => {
     const index = expandedMenu.value.indexOf(itemName)
     if (index > -1){
@@ -129,71 +140,147 @@
       expandedMenu.value.push(itemName)
     }
   }
-
+  
   const isExpanded = (itemName) => {
     return expandedMenu.value.includes(itemName)
   }
-
+  
   const isActiveRoute = (path) => {
     return route.path === path
   }
-
+  
   const menuItem = [
     {
       name: 'Dashboard',
       path: '/',
-      icon: 'bx bx-home'
+      icon: 'bx bx-home',
+      roles: ['master_admin', 'admin', 'user']
     },
     {
       name: 'Products',
       path: '/product',
       icon: 'bx bx-package',
+      roles: ['master_admin', 'admin', 'user'],
       subMenu: [
-        {name: 'All Products', path: '/products'},
-        {name: 'Categories', path: '/products/categories'},
-        {name: 'Stock Alert', path: '/products/stock-alert'}
+        {name: 'All Products', path: '/products', roles: ['master_admin', 'admin', 'user']},
+        {name: 'Categories', path: '/products/categories', roles: ['master_admin', 'admin']},
+        {name: 'Stock Alert', path: '/products/stock-alert', roles: ['master_admin', 'admin', 'user']}
       ]
     },
     {
-      name: 'Orders',
-      path: '/orders',
-      icon: 'bx bx-cart',
+      name: 'Transactions',
+      path: '/transactions',
+      icon: 'bx bx-sync',
+      roles: ['master_admin', 'admin', 'user'],
       subMenu: [
-        {name: 'Order List', path: '/orders'},
-        {name: 'Pending Orders', path: '/orders/pending-orders'},
-        {name: 'Shipping', path: '/orders/shipping'}
+        {name: 'Stock In', path: '/transactions/stock-in', roles: ['master_admin', 'admin']},
+        {name: 'Stock Out', path: '/transactions/stock-out', roles: ['master_admin', 'admin']},
+        {name: 'History Transactions', path: '/transactions/history-transactions', roles: ['master_admin', 'admin', 'user']}
       ]
     },
     {
-      name: 'Customers',
-      path: '/customers',
+      name: 'Users',
+      path: '/users',
       icon: 'bx bx-user',
+      roles: ['master_admin'],
       subMenu: [
-        {name: 'Customers List', path: '/customers'},
-        {name: 'Reviews', path: '/customers/reviews'},
-      ]
-    },
-    {
-      name: 'Finance',
-      path: '/finance',
-      icon: 'bx bx-dollar-circle',
-      subMenu: [
-        {name: 'Revenue', path: '/finance'},
-        {name: 'Reports', path:'/finance/reports'}
+        {name: 'User List', path: '/users', roles: ['master_admin']},
+        {name: 'Activity Log', path: '/activity-log', roles: ['master_admin']}
       ]
     },
     {
       name: 'Settings',
       path: '/settings',
       icon: 'bx bx-cog',
+      roles: ['master_admin', 'admin', 'user'],
       subMenu: [
-        {name: 'Profile', path: '/settings'},
-        {name: 'Store Config', path: '/settings/store-config'}
+        {name: 'Profile', path: '/settings', roles: ['master_admin', 'admin', 'user']},
+        {name: 'Store Config', path: '/settings/store-config', roles: ['master_admin', 'admin', 'user']}
       ]
     }
   ]
+  
+  const filteredMenu = computed(() => {
+    return menuItem.filter(item =>
+      item.roles?.includes(userRole.value)
+    )
+  })
+
+  const getVisibleSubmenu = (subMenu) => {
+    if (!subMenu) return []
+
+    return subMenu.filter(sub =>
+      sub.roles.includes(userRole.value)
+    )
+  }
+
+  onMounted(async () => {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('users_with_roles')
+      .select('roles')
+      .eq('id', user.id)
+      .single()
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    userRole.value =
+      data.roles.find(role =>
+        ['master_admin', 'admin', 'user'].includes(role)
+      ) || 'user'
+
+    console.log('Roles:', data.roles)
+    console.log('Current Role:', userRole.value)
+  })
 
   const goTo = (path) => {
     router.push(path)
   }
+
+  onMounted(async () => {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from('users_with_roles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    currentUserInfo.value = data
+  })
+
+  const userInitial = computed(() => {
+    const name =
+      profile.value?.full_name ||
+      currentUser.value?.email?.split('@')[0] ||
+      'User'
+
+    const words = name.split(' ')
+
+    if (words.length > 1) {
+      return (
+        words[0][0] +
+        words[1][0]
+      ).toUpperCase()
+    }
+
+    return name.substring(0, 2).toUpperCase()
+  })
 </script>
